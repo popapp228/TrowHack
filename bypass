@@ -1,4 +1,3 @@
--- Основные настройки GUI
 local guiCreated = false
 local currentScreenGui = nil
 local guiClosed = false
@@ -6,7 +5,6 @@ local guiClosed = false
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
--- Функция для перетаскивания
 local function setupDrag(frame)
     local dragToggle = false
     local dragInput, dragStart, startPos
@@ -49,7 +47,6 @@ local function setupDrag(frame)
     end)
 end
 
--- Функция создания уведомлений
 local function createNotification(text, bgColor, isSuccess)
     local NotificationGui = Instance.new("ScreenGui")
     NotificationGui.Name = "LinkvertiseNotification"
@@ -98,7 +95,6 @@ local function createNotification(text, bgColor, isSuccess)
     end)
 end
 
--- Функция для URL-кодирования
 local function urlEncode(str)
     local chars = {
         ["%"] = "%%25",
@@ -126,7 +122,6 @@ local function urlEncode(str)
     return encoded
 end
 
--- Функция замены ссылки
 local function ConvertLink(link)
     if link:find("linkvertise%.com") then
         return link:gsub("linkvertise%.com", "linkvertise.lol")
@@ -140,7 +135,6 @@ local function ConvertLink(link)
     return nil
 end
 
--- Функция копирования
 local function copyToClipboard(text)
     local SetClipboard = setclipboard or toclipboard or set_clipboard
     if SetClipboard then
@@ -150,13 +144,11 @@ local function copyToClipboard(text)
     return false
 end
 
--- Создание основного GUI (ваш макет)
 local function createFullGUI()
     if guiCreated or guiClosed then
         return
     end
     
-    -- Instances:
     local LinkvertiseConverterGUI = Instance.new("ScreenGui")
     local MainFrame = Instance.new("Frame")
     local UICorner = Instance.new("UICorner")
@@ -174,7 +166,6 @@ local function createFullGUI()
     local UIStroke1 = Instance.new("UIStroke")
     local TextLabel1 = Instance.new("TextLabel")
 
-    -- Properties:
     LinkvertiseConverterGUI.DisplayOrder = 999
     LinkvertiseConverterGUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     LinkvertiseConverterGUI.Name = "LinkvertiseConverterGUI"
@@ -210,7 +201,6 @@ local function createFullGUI()
     UICorner1.TopRightRadius = UDim.new(0, 12)
     UICorner1.Parent = Frame
 
-    -- Текст по центру
     TextLabel.Font = Enum.Font.GothamBold
     TextLabel.Text = "     TROWHACK BYPASS"
     TextLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
@@ -289,14 +279,12 @@ local function createFullGUI()
     TextLabel1.Size = UDim2.new(1, -20, 0, 35)
     TextLabel1.Parent = MainFrame
 
-    -- Сохраняем ссылки для использования
     local closeButton = TextButton
     local convertButton = TextButton1
     local textBox = TextBox
     local mainFrame = MainFrame
     local screenGui = LinkvertiseConverterGUI
 
-    -- Ховер эффект для крестика
     closeButton.MouseEnter:Connect(function()
         closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     end)
@@ -305,7 +293,6 @@ local function createFullGUI()
         closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
     end)
 
-    -- RGB анимация для кнопки BYPASS
     local rgbTime = 0
     local function updateRGB()
         rgbTime = rgbTime + 0.05
@@ -318,17 +305,14 @@ local function createFullGUI()
 
     local rgbConnection = game:GetService("RunService").Heartbeat:Connect(updateRGB)
 
-    -- Эффекты наведения на кнопку BYPASS
     convertButton.MouseEnter:Connect(function()
         convertButton.TextColor3 = Color3.fromRGB(255, 255, 255)
         convertButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
     end)
 
     convertButton.MouseLeave:Connect(function()
-        -- Возвращаем RGB
     end)
 
-    -- Обработчик конвертации
     convertButton.MouseButton1Click:Connect(function()
         local inputText = textBox.Text
         if inputText ~= "" then
@@ -348,7 +332,6 @@ local function createFullGUI()
         end
     end)
 
-    -- Закрытие GUI
     closeButton.MouseButton1Click:Connect(function()
         mainFrame:TweenPosition(UDim2.new(0.5, 0, 1.5, 0), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.5, true)
         task.wait(0.5)
@@ -359,14 +342,12 @@ local function createFullGUI()
         screenGui:Destroy()
     end)
 
-    -- Настройка перетаскивания
     setupDrag(mainFrame)
     
     guiCreated = true
     currentScreenGui = screenGui
 end
 
--- Запуск GUI
 local player = game.Players.LocalPlayer
 
 local function onCharacterAdded(character)
