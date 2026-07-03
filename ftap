@@ -294,79 +294,55 @@ local function createCosmicNotification(text, isFinal)
     return NotificationGui
 end
 
-local function createWarningDialog(callback)
-    local WarningGui = Instance.new("ScreenGui")
-    WarningGui.Name = "WarningDialog"
-    WarningGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    WarningGui.DisplayOrder = 1000
-    WarningGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui") 
+local function createBypassNotification(text, isFinal)
+    local NotificationGui = Instance.new("ScreenGui")
+    NotificationGui.Name = "BypassNotification"
+    NotificationGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    NotificationGui.DisplayOrder = 1000
+    NotificationGui.Parent = game:GetService("CoreGui")
 
-    local WarningFrame = Instance.new("Frame")
-    WarningFrame.Size = UDim2.new(0, 350, 0, 180)
-    WarningFrame.Position = UDim2.new(0.5, -175, 0.5, -90)
-    WarningFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    WarningFrame.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
-    WarningFrame.BorderSizePixel = 0
-    WarningFrame.Parent = WarningGui
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 300, 0, 80)
+    MainFrame.Position = UDim2.new(1, -320, 1, -100)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 80, 60)
+    MainFrame.BackgroundTransparency = 0.1
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = NotificationGui
 
-    local WarningCorner = Instance.new("UICorner")
-    WarningCorner.CornerRadius = UDim.new(0, 12)
-    WarningCorner.Parent = WarningFrame
+    local FrameCorner = Instance.new("UICorner")
+    FrameCorner.CornerRadius = UDim.new(0, 12)
+    FrameCorner.Parent = MainFrame
 
-    local WarningStroke = Instance.new("UIStroke")
-    WarningStroke.Thickness = 2
-    WarningStroke.Color = Color3.fromRGB(80, 0, 0)
-    WarningStroke.Parent = WarningFrame
+    local FrameStroke = Instance.new("UIStroke")
+    FrameStroke.Thickness = 2
+    FrameStroke.Color = Color3.fromRGB(50, 150, 120)
+    FrameStroke.Parent = MainFrame
 
-    local WarningText = Instance.new("TextLabel")
-    WarningText.Size = UDim2.new(1, -40, 0, 80)
-    WarningText.Position = UDim2.new(0, 20, 0, 20)
-    WarningText.BackgroundTransparency = 1
-    WarningText.Text = "Are you sure you want to execute Infinite Yield?\nBlizT will not load if you continue!"
-    WarningText.TextColor3 = Color3.fromRGB(255, 150, 150)
-    WarningText.TextSize = 14
-    WarningText.Font = Enum.Font.GothamBold
-    WarningText.TextWrapped = true
-    WarningText.Parent = WarningFrame
+    local NotificationText = Instance.new("TextLabel")
+    NotificationText.Size = UDim2.new(1, -30, 1, -20)
+    NotificationText.Position = UDim2.new(0, 15, 0, 10)
+    NotificationText.BackgroundTransparency = 1
+    NotificationText.Text = text
+    NotificationText.TextColor3 = Color3.fromRGB(200, 255, 230)
+    NotificationText.TextSize = 16
+    NotificationText.Font = Enum.Font.GothamBold
+    NotificationText.TextXAlignment = Enum.TextXAlignment.Center
+    NotificationText.TextWrapped = true
+    NotificationText.Parent = MainFrame
 
-    local ExecuteButton = Instance.new("TextButton")
-    ExecuteButton.Size = UDim2.new(0, 120, 0, 30)
-    ExecuteButton.Position = UDim2.new(0, 40, 0, 120)
-    ExecuteButton.BackgroundColor3 = Color3.fromRGB(40, 100, 40)
-    ExecuteButton.Text = "EXECUTING"
-    ExecuteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ExecuteButton.TextSize = 14
-    ExecuteButton.Font = Enum.Font.GothamBold
-    ExecuteButton.Parent = WarningFrame
+    MainFrame.Position = UDim2.new(1, 350, 1, -100)
+    MainFrame:TweenPosition(UDim2.new(1, -320, 1, -100), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.5, true)
 
-    local ExecuteCorner = Instance.new("UICorner")
-    ExecuteCorner.CornerRadius = UDim.new(0, 6)
-    ExecuteCorner.Parent = ExecuteButton
-
-    local CloseButton = Instance.new("TextButton")
-    CloseButton.Size = UDim2.new(0, 120, 0, 30)
-    CloseButton.Position = UDim2.new(1, -160, 0, 120)
-    CloseButton.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
-    CloseButton.Text = "CLOSE"
-    CloseButton.TextColor3 = Color3.fromRGB(255, 200, 200)
-    CloseButton.TextSize = 14
-    CloseButton.Font = Enum.Font.GothamBold
-    CloseButton.Parent = WarningFrame
-
-    local CloseCorner = Instance.new("UICorner")
-    CloseCorner.CornerRadius = UDim.new(0, 6)
-    CloseCorner.Parent = CloseButton
-
-    ExecuteButton.MouseButton1Click:Connect(function()
-        WarningGui:Destroy()
-        if callback then
-            callback()
-        end
-    end)
-
-    CloseButton.MouseButton1Click:Connect(function()
-        WarningGui:Destroy()
-    end)
+    if isFinal then
+        task.delay(2.5, function()
+            if MainFrame and MainFrame.Parent then
+                MainFrame:TweenPosition(UDim2.new(1, 350, 1, -100), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.5, true)
+                task.wait(0.5)
+                NotificationGui:Destroy()
+            end
+        end)
+    end
+    return NotificationGui
 end
 
 local function createFullGUI()
@@ -374,11 +350,11 @@ local function createFullGUI()
     ScreenGui.Name = "TrowHackGUI"
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.DisplayOrder = 999
-    ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    ScreenGui.Parent = game:GetService("CoreGui")
 
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 251, 0, 332)
+    MainFrame.Size = UDim2.new(0, 251, 0, 415)
     MainFrame.Position = mainFramePosition
     MainFrame.BackgroundColor3 = Color3.fromRGB(60, 255, 0)
     MainFrame.BorderSizePixel = 0
@@ -397,7 +373,7 @@ local function createFullGUI()
     local LogoButton = Instance.new("ImageButton")
     LogoButton.Name = "Logo"
     LogoButton.Size = UDim2.new(0, 225, 0, 150)
-    LogoButton.Position = UDim2.new(0.052, 0, -0.453, 0)
+    LogoButton.Position = UDim2.new(0.056, 0, -0.364, 0)
     LogoButton.Image = "rbxassetid://118649291600769"
     LogoButton.ImageTransparency = 0.03
     LogoButton.BackgroundTransparency = 1
@@ -510,18 +486,41 @@ local function createFullGUI()
     CosmicCorner.CornerRadius = UDim.new(0, 8)
     CosmicCorner.Parent = CosmicButton
 
+    local BypassButton = Instance.new("TextButton")
+    BypassButton.Size = UDim2.new(1, 0, 0, 60)
+    BypassButton.Position = UDim2.new(0, 0, 0, 210)
+    BypassButton.BackgroundColor3 = Color3.fromRGB(20, 80, 60)
+    BypassButton.Text = "Bypass"
+    BypassButton.TextColor3 = Color3.fromRGB(200, 255, 230)
+    BypassButton.TextSize = 16
+    BypassButton.Font = Enum.Font.GothamBold
+    BypassButton.Parent = ButtonsFrame
+
+    local BypassCorner = Instance.new("UICorner")
+    BypassCorner.CornerRadius = UDim.new(0, 8)
+    BypassCorner.Parent = BypassButton
+
+    local IconFrame = Instance.new("Frame")
+    IconFrame.Size = UDim2.new(1, 0, 0, 60)
+    IconFrame.Position = UDim2.new(0, 0, 0, 280)
+    IconFrame.BackgroundTransparency = 1
+    IconFrame.Parent = ButtonsFrame
+
+    local DiscordButton = Instance.new("ImageButton")
+    DiscordButton.Size = UDim2.new(0, 60, 0, 60)
+    DiscordButton.Position = UDim2.new(0, 0, 0, 0)
+    DiscordButton.BackgroundTransparency = 1
+    DiscordButton.Image = "rbxassetid://10367063073"
+    DiscordButton.ScaleType = Enum.ScaleType.Fit
+    DiscordButton.Parent = IconFrame
+
     local TelegramButton = Instance.new("ImageButton")
-    TelegramButton.Size = UDim2.new(1, 0, 0, 60)
-    TelegramButton.Position = UDim2.new(0, 0, 0, 210)
-    TelegramButton.BackgroundColor3 = Color3.fromRGB(30, 60, 90)
+    TelegramButton.Size = UDim2.new(0, 60, 0, 60)
+    TelegramButton.Position = UDim2.new(1, -60, 0, 0)
     TelegramButton.BackgroundTransparency = 1
     TelegramButton.Image = "rbxassetid://125399669098418"
     TelegramButton.ScaleType = Enum.ScaleType.Fit
-    TelegramButton.Parent = ButtonsFrame
-
-    local TelegramCorner = Instance.new("UICorner")
-    TelegramCorner.CornerRadius = UDim.new(0, 8)
-    TelegramCorner.Parent = TelegramButton
+    TelegramButton.Parent = IconFrame
 
     local rgbTime = 0
     local function updateRGB()
@@ -622,6 +621,30 @@ local function createFullGUI()
         CosmicButton.BackgroundColor3 = Color3.fromRGB(40, 30, 80)
     end
 
+    local function loadBypass()
+        BypassButton.Text = "Loading..."
+        BypassButton.BackgroundColor3 = Color3.fromRGB(40, 120, 80)
+        
+        local success = pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/popapp228/TrowHack/refs/heads/main/bypass"))()
+        end)
+        
+        if success then
+            createBypassNotification("Bypass Loaded!", true)
+            BypassButton.Text = "Loaded!"
+            BypassButton.BackgroundColor3 = Color3.fromRGB(60, 150, 100)
+            task.wait(2)
+        else
+            createBypassNotification("Error Loading Bypass!", true)
+            BypassButton.Text = "Error!"
+            BypassButton.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
+            task.wait(2)
+        end
+        
+        BypassButton.Text = "Bypass"
+        BypassButton.BackgroundColor3 = Color3.fromRGB(20, 80, 60)
+    end
+
     local function copyToClipboard(text)
         local SetClipboard = setclipboard or toclipboard or set_clipboard
         if SetClipboard then
@@ -635,11 +658,22 @@ local function createFullGUI()
         local success = copyToClipboard("Cosmic123")
         
         if success then
-            createCosmicNotification("KEY COPIED!", Color3.fromRGB(40, 30, 80), 92907808387041)
+            createCosmicNotification("KEY COPIED!", true)
             task.wait(0.5)
             loadCosmic()
         else
-            createCosmicNotification("COPY FAILED!", Color3.fromRGB(80, 30, 30), 92907808387041)
+            createCosmicNotification("COPY FAILED!", true)
+        end
+    end
+
+    local function onDiscordClick()
+        local discordLink = "https://discord.gg/trowhack"
+        local success = copyToClipboard(discordLink)
+        
+        if success then
+            createNotification("DISCORD COPIED!", Color3.fromRGB(88, 101, 242), 10367063073)
+        else
+            createNotification("COPY FAILED!", Color3.fromRGB(80, 30, 30), 10367063073)
         end
     end
 
@@ -654,17 +688,20 @@ local function createFullGUI()
         end
     end
 
-    InfiniteYieldButton.MouseButton1Click:Connect(function()
-        if bliztLoaded then
-            loadInfiniteYield()
-        else
-            createWarningDialog(loadInfiniteYield)
-        end
-    end)
-
+    InfiniteYieldButton.MouseButton1Click:Connect(loadInfiniteYield)
     BlizTButton.MouseButton1Click:Connect(loadBlizT)
     CosmicButton.MouseButton1Click:Connect(onCosmicClick)
+    BypassButton.MouseButton1Click:Connect(loadBypass)
+    DiscordButton.MouseButton1Click:Connect(onDiscordClick)
     TelegramButton.MouseButton1Click:Connect(onTelegramClick)
+
+    DiscordButton.MouseEnter:Connect(function()
+        DiscordButton.ImageColor3 = Color3.fromRGB(150, 150, 150)
+    end)
+
+    DiscordButton.MouseLeave:Connect(function()
+        DiscordButton.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    end)
 
     TelegramButton.MouseEnter:Connect(function()
         TelegramButton.ImageColor3 = Color3.fromRGB(150, 150, 150)
