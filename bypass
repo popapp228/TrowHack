@@ -1,0 +1,382 @@
+-- Основные настройки GUI
+local guiCreated = false
+local currentScreenGui = nil
+local guiClosed = false
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Функция для перетаскивания
+local function setupDrag(frame)
+    local dragToggle = false
+    local dragInput, dragStart, startPos
+
+    local function updateInput(input)
+        local Delta = input.Position - dragStart
+        local Position = UDim2.new(
+            startPos.X.Scale, 
+            startPos.X.Offset + Delta.X, 
+            startPos.Y.Scale, 
+            startPos.Y.Offset + Delta.Y
+        )
+        TweenService:Create(frame, TweenInfo.new(0.15), {Position = Position}):Play()
+    end
+
+    frame.InputBegan:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) 
+            and UserInputService:GetFocusedTextBox() == nil then
+            dragToggle = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragToggle = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragToggle then
+            updateInput(input)
+        end
+    end)
+end
+
+-- Функция создания уведомлений
+local function createNotification(text, bgColor, isSuccess)
+    local NotificationGui = Instance.new("ScreenGui")
+    NotificationGui.Name = "LinkvertiseNotification"
+    NotificationGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    NotificationGui.DisplayOrder = 1000
+    NotificationGui.Parent = game:GetService("CoreGui")
+
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 350, 0, 60)
+    MainFrame.Position = UDim2.new(1, -370, 1, -80)
+    MainFrame.BackgroundColor3 = bgColor or Color3.fromRGB(0, 120, 255)
+    MainFrame.BackgroundTransparency = 0.15
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = NotificationGui
+
+    local FrameCorner = Instance.new("UICorner")
+    FrameCorner.CornerRadius = UDim.new(0, 12)
+    FrameCorner.Parent = MainFrame
+
+    local FrameStroke = Instance.new("UIStroke")
+    FrameStroke.Thickness = 2
+    FrameStroke.Color = isSuccess and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(255, 50, 50)
+    FrameStroke.Parent = MainFrame
+
+    local NotificationText = Instance.new("TextLabel")
+    NotificationText.Size = UDim2.new(1, -30, 1, 0)
+    NotificationText.Position = UDim2.new(0, 15, 0, 0)
+    NotificationText.BackgroundTransparency = 1
+    NotificationText.Text = text
+    NotificationText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    NotificationText.TextSize = 16
+    NotificationText.Font = Enum.Font.GothamBold
+    NotificationText.TextXAlignment = Enum.TextXAlignment.Center
+    NotificationText.TextWrapped = true
+    NotificationText.Parent = MainFrame
+
+    MainFrame.Position = UDim2.new(1, 400, 1, -80)
+    MainFrame:TweenPosition(UDim2.new(1, -370, 1, -80), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.5, true)
+
+    task.delay(2.5, function()
+        if MainFrame and MainFrame.Parent then
+            MainFrame:TweenPosition(UDim2.new(1, 400, 1, -80), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.5, true)
+            task.wait(0.5)
+            NotificationGui:Destroy()
+        end
+    end)
+end
+
+-- Функция для URL-кодирования
+local function urlEncode(str)
+    local chars = {
+        ["%"] = "%%25",
+        ["?"] = "%%3F",
+        ["="] = "%%3D",
+        ["&"] = "%%26",
+        ["/"] = "%%2F",
+        [":"] = "%%3A",
+        [" "] = "%%20",
+        ["#"] = "%%23",
+        ["+"] = "%%2B",
+        ["@"] = "%%40",
+        ["$"] = "%%24",
+        [","] = "%%2C",
+        [";"] = "%%3B",
+    }
+    
+    local encoded = str:gsub(".", function(c)
+        if chars[c] then
+            return chars[c]
+        else
+            return c
+        end
+    end)
+    return encoded
+end
+
+-- Функция замены ссылки
+local function ConvertLink(link)
+    if link:find("linkvertise%.com") then
+        return link:gsub("linkvertise%.com", "linkvertise.lol")
+    end
+    
+    if link:find("links%.lootlabs%.gg") or link:find("lockr%.so") or link:find("workink%.net") or link:find("work%.ink") then
+        local encoded = urlEncode(link)
+        return "https://rip.linkvertise.lol/bypass?url=" .. encoded
+    end
+    
+    return nil
+end
+
+-- Функция копирования
+local function copyToClipboard(text)
+    local SetClipboard = setclipboard or toclipboard or set_clipboard
+    if SetClipboard then
+        SetClipboard(text)
+        return true
+    end
+    return false
+end
+
+-- Создание основного GUI (ваш макет)
+local function createFullGUI()
+    if guiCreated or guiClosed then
+        return
+    end
+    
+    -- Instances:
+    local LinkvertiseConverterGUI = Instance.new("ScreenGui")
+    local MainFrame = Instance.new("Frame")
+    local UICorner = Instance.new("UICorner")
+    local UIStroke = Instance.new("UIStroke")
+    local Frame = Instance.new("Frame")
+    local UICorner1 = Instance.new("UICorner")
+    local TextLabel = Instance.new("TextLabel")
+    local TextButton = Instance.new("TextButton")
+    local UICorner2 = Instance.new("UICorner")
+    local Logo = Instance.new("ImageButton")
+    local TextBox = Instance.new("TextBox")
+    local UICorner3 = Instance.new("UICorner")
+    local TextButton1 = Instance.new("TextButton")
+    local UICorner4 = Instance.new("UICorner")
+    local UIStroke1 = Instance.new("UIStroke")
+    local TextLabel1 = Instance.new("TextLabel")
+
+    -- Properties:
+    LinkvertiseConverterGUI.DisplayOrder = 999
+    LinkvertiseConverterGUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    LinkvertiseConverterGUI.Name = "LinkvertiseConverterGUI"
+    LinkvertiseConverterGUI.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 35, 20)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Position = UDim2.new(0.5, -170, 0.5, -154)
+    MainFrame.Size = UDim2.new(0, 340, 0, 308)
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = LinkvertiseConverterGUI
+
+    UICorner.BottomLeftRadius = UDim.new(0, 12)
+    UICorner.BottomRightRadius = UDim.new(0, 12)
+    UICorner.CornerRadius = UDim.new(0, 12)
+    UICorner.TopLeftRadius = UDim.new(0, 12)
+    UICorner.TopRightRadius = UDim.new(0, 12)
+    UICorner.Parent = MainFrame
+
+    UIStroke.Color = Color3.fromRGB(0, 200, 0)
+    UIStroke.Thickness = 2
+    UIStroke.Parent = MainFrame
+
+    Frame.BackgroundColor3 = Color3.fromRGB(10, 25, 10)
+    Frame.BackgroundTransparency = 0.3
+    Frame.Size = UDim2.new(1, 0, 0, 35)
+    Frame.Parent = MainFrame
+
+    UICorner1.BottomLeftRadius = UDim.new(0, 12)
+    UICorner1.BottomRightRadius = UDim.new(0, 12)
+    UICorner1.CornerRadius = UDim.new(0, 12)
+    UICorner1.TopLeftRadius = UDim.new(0, 12)
+    UICorner1.TopRightRadius = UDim.new(0, 12)
+    UICorner1.Parent = Frame
+
+    -- Текст по центру
+    TextLabel.Font = Enum.Font.GothamBold
+    TextLabel.Text = "     TROWHACK BYPASS"
+    TextLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    TextLabel.TextSize = 18
+    TextLabel.TextXAlignment = Enum.TextXAlignment.Center
+    TextLabel.TextYAlignment = Enum.TextYAlignment.Center
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Position = UDim2.new(0, 0, 0, 0)
+    TextLabel.Size = UDim2.new(1, -50, 1, 0)
+    TextLabel.Parent = Frame
+
+    TextButton.Font = Enum.Font.GothamBold
+    TextButton.Text = "X"
+    TextButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextButton.TextSize = 18
+    TextButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    TextButton.Position = UDim2.new(1, -35, 0, 2)
+    TextButton.Size = UDim2.new(0, 30, 0, 30)
+    TextButton.Parent = Frame
+
+    UICorner2.BottomLeftRadius = UDim.new(0, 6)
+    UICorner2.BottomRightRadius = UDim.new(0, 6)
+    UICorner2.CornerRadius = UDim.new(0, 6)
+    UICorner2.TopLeftRadius = UDim.new(0, 6)
+    UICorner2.TopRightRadius = UDim.new(0, 6)
+    UICorner2.Parent = TextButton
+
+    Logo.Image = "rbxassetid://118649291600769"
+    Logo.ImageTransparency = 0.03
+    Logo.BackgroundTransparency = 1
+    Logo.BorderSizePixel = 0
+    Logo.Position = UDim2.new(0.218, 0, -3.41, 0)
+    Logo.Size = UDim2.new(0, 193, 0, 121)
+    Logo.Name = "Logo"
+    Logo.Parent = Frame
+
+    TextBox.ClearTextOnFocus = false
+    TextBox.Font = Enum.Font.Gotham
+    TextBox.PlaceholderColor3 = Color3.fromRGB(180, 255, 180)
+    TextBox.PlaceholderText = "Вставьте ссылку сюда"
+    TextBox.Text = ""
+    TextBox.TextColor3 = Color3.fromRGB(200, 255, 200)
+    TextBox.TextSize = 14
+    TextBox.TextXAlignment = Enum.TextXAlignment.Left
+    TextBox.BackgroundColor3 = Color3.fromRGB(15, 30, 15)
+    TextBox.Position = UDim2.new(0.06, 0, 0.25, 0)
+    TextBox.Size = UDim2.new(0.88, 0, 0, 45)
+    TextBox.Parent = MainFrame
+
+    UICorner3.Parent = TextBox
+
+    TextButton1.Font = Enum.Font.GothamBold
+    TextButton1.Text = "BYPASS"
+    TextButton1.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextButton1.TextScaled = true
+    TextButton1.TextSize = 14
+    TextButton1.TextWrapped = true
+    TextButton1.BackgroundColor3 = Color3.fromRGB(135.531, 175.64, 7.179)
+    TextButton1.Position = UDim2.new(0.25, 0, 0.62, 0)
+    TextButton1.Size = UDim2.new(0.5, 0, 0, 40)
+    TextButton1.Parent = MainFrame
+
+    UICorner4.Parent = TextButton1
+
+    UIStroke1.Color = Color3.fromRGB(169.413, 219.55, 8.974)
+    UIStroke1.Thickness = 3
+    UIStroke1.Parent = TextButton1
+
+    TextLabel1.Font = Enum.Font.Gotham
+    TextLabel1.Text = "Поддерживает: linkvertise.com | lootlabs.gg | lockr.so | work.ink"
+    TextLabel1.TextColor3 = Color3.fromRGB(100, 200, 100)
+    TextLabel1.TextSize = 11
+    TextLabel1.TextWrapped = true
+    TextLabel1.BackgroundTransparency = 1
+    TextLabel1.Position = UDim2.new(0, 10, 0.83, 0)
+    TextLabel1.Size = UDim2.new(1, -20, 0, 35)
+    TextLabel1.Parent = MainFrame
+
+    -- Сохраняем ссылки для использования
+    local closeButton = TextButton
+    local convertButton = TextButton1
+    local textBox = TextBox
+    local mainFrame = MainFrame
+    local screenGui = LinkvertiseConverterGUI
+
+    -- Ховер эффект для крестика
+    closeButton.MouseEnter:Connect(function()
+        closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    end)
+
+    closeButton.MouseLeave:Connect(function()
+        closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    end)
+
+    -- RGB анимация для кнопки BYPASS
+    local rgbTime = 0
+    local function updateRGB()
+        rgbTime = rgbTime + 0.05
+        local r = math.sin(rgbTime) * 0.5 + 0.5
+        local g = math.sin(rgbTime + 2) * 0.5 + 0.5
+        local b = math.sin(rgbTime + 4) * 0.5 + 0.5
+        UIStroke1.Color = Color3.new(r, g, b)
+        convertButton.BackgroundColor3 = Color3.new(r * 0.6, g * 0.8, b * 0.3)
+    end
+
+    local rgbConnection = game:GetService("RunService").Heartbeat:Connect(updateRGB)
+
+    -- Эффекты наведения на кнопку BYPASS
+    convertButton.MouseEnter:Connect(function()
+        convertButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        convertButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    end)
+
+    convertButton.MouseLeave:Connect(function()
+        -- Возвращаем RGB
+    end)
+
+    -- Обработчик конвертации
+    convertButton.MouseButton1Click:Connect(function()
+        local inputText = textBox.Text
+        if inputText ~= "" then
+            local result = ConvertLink(inputText)
+            if result then
+                local success = copyToClipboard(result)
+                if success then
+                    createNotification("✓ Ссылка скопирована!", Color3.fromRGB(0, 80, 30), true)
+                else
+                    createNotification("❌ Ошибка копирования!", Color3.fromRGB(80, 0, 0), false)
+                end
+            else
+                createNotification("❌ Неподдерживаемый сайт!", Color3.fromRGB(80, 0, 0), false)
+            end
+        else
+            createNotification("⚠️ Введите ссылку!", Color3.fromRGB(80, 60, 0), false)
+        end
+    end)
+
+    -- Закрытие GUI
+    closeButton.MouseButton1Click:Connect(function()
+        mainFrame:TweenPosition(UDim2.new(0.5, 0, 1.5, 0), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.5, true)
+        task.wait(0.5)
+        guiCreated = false
+        guiClosed = true
+        currentScreenGui = nil
+        rgbConnection:Disconnect()
+        screenGui:Destroy()
+    end)
+
+    -- Настройка перетаскивания
+    setupDrag(mainFrame)
+    
+    guiCreated = true
+    currentScreenGui = screenGui
+end
+
+-- Запуск GUI
+local player = game.Players.LocalPlayer
+
+local function onCharacterAdded(character)
+    if guiClosed then
+        return
+    end
+    if not guiCreated or not currentScreenGui or not currentScreenGui.Parent then
+        createFullGUI()
+    end
+end
+
+createFullGUI()
+player.CharacterAdded:Connect(onCharacterAdded)
